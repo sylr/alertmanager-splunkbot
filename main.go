@@ -4,27 +4,13 @@ package main
 
 import (
   "os"
-  "fmt"
   "time"
-  "bytes"
-  "io/ioutil"
-  "strings"
-  "net/url"
   "net/http"
   "crypto/tls"
-  "encoding/json"
+  "github.com/sylr/alertmanager-splunkbot/splunkbot"
   "github.com/jessevdk/go-flags"
   log "github.com/sirupsen/logrus"
 )
-
-type SpunkHECMessage struct {
-  Time                string          `json:"time,omitempty"`
-  Host                string          `json:"host,omitempty"`
-  Source              string          `json:"source,omitempty"`
-  Sourcetype          string          `json:"sourcetype,omitempty"`
-  Index               string          `json:"index,omitempty"`
-  Event               interface{}     `json:"event"`
-}
 
 type Options struct {
   Verbose             []bool          `short:"v" long:"verbose" description:"Show verbose debug information"`
@@ -38,76 +24,10 @@ type Options struct {
   SplunkTLSInsecure   bool            `short:"k" long:"insecure" description:"Do not check Splunk TLS certificate"`
 }
 
-type Splunkbot struct {
-  httpClient          *http.Client
-}
-
-func (sbot Splunkbot) serve() error {
-  http.HandleFunc("/", sbot.alert)
-  err := http.ListenAndServe(fmt.Sprintf("%s:%d", opts.ListeningAddress, opts.ListeningPort), nil)
-
-  return err
-}
-
-func (s Splunkbot) alert(w http.ResponseWriter, r *http.Request) {
-  log.Debugf("New request: %v", r)
-
-  var alert map[string]interface{}
-  var message SpunkHECMessage
-
-  // Decode input
-  buf, _  := ioutil.ReadAll(r.Body)
-  err     := json.Unmarshal(buf, &alert)
-
-  // if buf is not valid json we cast it as string
-  if err != nil {
-    message.Event = interface{}(string(buf))
-  } else {
-    message.Event = alert
-  }
-
-  // Splunk Message 
-  message.Sourcetype  = opts.SplunkSourcetype
-  message.Index       = opts.SplunkIndex
-
-  if value, ok := alert["externalURL"]; ok {
-    u, _ := url.Parse(value.(string))
-    message.Host    = u.Hostname()
-    message.Source  = strings.TrimLeft(u.Path, "/")
-  }
-
-  // HTTP Splunk request
-  j, _  := json.Marshal(message)
-  jr    := bytes.NewReader(j)
-
-  splunkReq, _ := http.NewRequest("POST", opts.SplunkUrl, jr)
-  splunkReq.Header.Set("Authorization", "Splunk " + opts.SplunkToken)
-
-  // Do request
-  resp, err := s.httpClient.Do(splunkReq)
-
-  if err != nil {
-    log.Errorf("Failed to send request to splunk: %+v", err)
-
-    if resp != nil {
-      buf, _ := ioutil.ReadAll(resp.Body)
-      w.WriteHeader(resp.StatusCode)
-      w.Write(buf)
-    } else {
-      w.WriteHeader(503)
-      w.Write([]byte(fmt.Sprintf("Something went wrong:\n\n%+v\n", err)))
-    }
-  } else {
-    buf, _ := ioutil.ReadAll(resp.Body)
-    w.WriteHeader(resp.StatusCode)
-    w.Write(buf)
-  }
-
-  log.Debugf("End of request")
-}
-
-var opts Options
-var parser = flags.NewParser(&opts, flags.Default)
+var (
+  opts Options
+  parser = flags.NewParser(&opts, flags.Default)
+)
 
 func init() {
   // Log as JSON instead of the default ASCII formatter.
@@ -161,12 +81,18 @@ func main() {
   }
 
   // Splunkbot
-  sbot := Splunkbot{
-    httpClient:       client,
+  sbot := &splunkbot.Splunkbot{
+    HttpClient:       client,
+    ListeningAddress: opts.ListeningAddress,
+    ListeningPort:    opts.ListeningPort,
+    SplunkSourcetype: opts.SplunkSourcetype,
+    SplunkIndex:      opts.SplunkIndex,
+    SplunkUrl:        opts.SplunkUrl,
+    SplunkToken:      opts.SplunkToken,
   }
 
   // Serving
-  err := sbot.serve()
+  err := sbot.Serve()
 
   if err != nil {
     log.Fatal(err)
