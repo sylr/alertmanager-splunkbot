@@ -42,6 +42,13 @@ type Splunkbot struct {
   httpClient          *http.Client
 }
 
+func (sbot Splunkbot) serve() error {
+  http.HandleFunc("/", sbot.alert)
+  err := http.ListenAndServe(fmt.Sprintf("%s:%d", opts.ListeningAddress, opts.ListeningPort), nil)
+
+  return err
+}
+
 func (s Splunkbot) alert(w http.ResponseWriter, r *http.Request) {
   log.Debugf("New request: %v", r)
 
@@ -158,8 +165,8 @@ func main() {
     httpClient:       client,
   }
 
-  http.HandleFunc("/", sbot.alert)
-  err := http.ListenAndServe(fmt.Sprintf("%s:%d", opts.ListeningAddress, opts.ListeningPort), nil)
+  // Serving
+  err := sbot.serve()
 
   if err != nil {
     log.Fatal(err)
