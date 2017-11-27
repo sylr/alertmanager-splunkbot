@@ -35,7 +35,7 @@ type Options struct {
   SplunkToken         string          `short:"t" long:"splunk-token" description:"Splunk HEC token" env:"SPLUNKBOT_SPLUNK_TOKEN" required:"true"`
   SplunkIndex         string          `short:"i" long:"splunk-index" description:"Splunk index" env:"SPLUNKBOT_SPLUNK_INDEX"`
   SplunkSourcetype    string          `short:"s" long:"splunk-sourcetype" description:"Splunk event sourcetype" env:"SPLUNKBOT_SPLUNK_SOURCETYPE" required:"true" default:"alertmanager"`
-  SplunkTLSInsecure   bool            `short:"k" long:"insecure" description:"Do not check Splunk TLS certificate" default:"false"`
+  SplunkTLSInsecure   bool            `short:"k" long:"insecure" description:"Do not check Splunk TLS certificate"`
 }
 
 type Splunkbot struct {
@@ -121,6 +121,7 @@ func main() {
     if flagsErr, ok := err.(*flags.Error); ok && flagsErr.Type == flags.ErrHelp {
       os.Exit(0)
     } else {
+      log.Fatal(err)
       os.Exit(1)
     }
   }
@@ -158,5 +159,10 @@ func main() {
   }
 
   http.HandleFunc("/", sbot.alert)
-  http.ListenAndServe(fmt.Sprintf("%s:%d", opts.ListeningAddress, opts.ListeningPort), nil)
+  err := http.ListenAndServe(fmt.Sprintf("%s:%d", opts.ListeningAddress, opts.ListeningPort), nil)
+
+  if err != nil {
+    log.Fatal(err)
+    os.Exit(1)
+  }
 }
