@@ -26,7 +26,8 @@ type Options struct {
 
 var (
   opts Options
-  parser = flags.NewParser(&opts, flags.Default)
+  parser  = flags.NewParser(&opts, flags.Default)
+  version = "v0.0.0-dev"
 )
 
 func init() {
@@ -65,6 +66,7 @@ func main() {
   log.Debugf("Options: %+v", opts)
 
   // Starting server
+  log.Infof("Version: %s", version)
   log.Infof("Starting server at http://%s:%v", opts.ListeningAddress, opts.ListeningPort)
 
   // HTTP Transport
