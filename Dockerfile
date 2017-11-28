@@ -15,6 +15,7 @@ FROM alpine:3.6
 
 WORKDIR /bin
 RUN apk --no-cache add ca-certificates
+RUN apk update && apk upgrade && apk add --no-cache bash curl
 COPY --from=builder "/go/bin/alertmanager-splunkbot" .
 
 ENTRYPOINT ["/bin/alertmanager-splunkbot"]
