@@ -1,4 +1,4 @@
-FROM golang:1.9.2-alpine3.6
+FROM golang:1.9.2-alpine3.6 as builder
 
 ADD . $GOPATH/src/github.com/sylr/alertmanager-splunkbot
 WORKDIR $GOPATH/src/github.com/sylr/alertmanager-splunkbot
@@ -15,6 +15,6 @@ FROM alpine:3.6
 
 WORKDIR /bin
 RUN apk --no-cache add ca-certificates
-COPY --from=0 "/go/bin/alertmanager-splunkbot" .
+COPY --from=builder "/go/bin/alertmanager-splunkbot" .
 
 ENTRYPOINT ["/bin/alertmanager-splunkbot"]
