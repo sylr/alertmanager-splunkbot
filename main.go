@@ -4,6 +4,7 @@ package main
 
 import (
   "os"
+  "fmt"
   "time"
   "net/http"
   "crypto/tls"
@@ -12,8 +13,9 @@ import (
   log "github.com/sirupsen/logrus"
 )
 
-type Options struct {
-  Verbose             []bool          `short:"v" long:"verbose" description:"Show verbose debug information"`
+type SplunkbotOptions struct {
+  Verbose           []bool            `short:"v" long:"verbose" description:"Show verbose debug information"`
+  Version             bool            `          long:"version" description:"Show version"`
   ListeningAddress    string          `short:"a" long:"address" description:"Listening address" env:"SPLUNKBOT_LISTENING_ADDRESS" default:"127.0.0.1"`
   ListeningPort       uint            `short:"p" long:"port" description:"Listening port" env:"SPLUNKBOT_LISTENING_PORT" default:"44553"`
   SplunkUrl           string          `short:"u" long:"splunk-url" description:"Splunk HEC endpoint" env:"SPLUNKBOT_SPLUNK_URL" required:"true"`
@@ -25,7 +27,7 @@ type Options struct {
 }
 
 var (
-  opts Options
+  opts    = SplunkbotOptions{}
   parser  = flags.NewParser(&opts, flags.Default)
   version = "v0.0.0-dev"
 )
@@ -45,6 +47,16 @@ func init() {
 
 // main
 func main() {
+  // looing for --version in args
+  for _, val := range os.Args {
+    if val == "--version" {
+      fmt.Printf("alertmanager-splunkbot version %s\n", version)
+      os.Exit(0)
+    } else if val == "--" {
+      break
+    }
+  }
+
   if _, err := parser.Parse(); err != nil {
     if flagsErr, ok := err.(*flags.Error); ok && flagsErr.Type == flags.ErrHelp {
       os.Exit(0)
