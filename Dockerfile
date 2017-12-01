@@ -6,7 +6,6 @@ WORKDIR $GOPATH/src/github.com/sylr/alertmanager-splunkbot
 RUN apk update && apk upgrade && apk add --no-cache git
 
 RUN uname -a
-RUN alpine -version
 RUN go version
 RUN git describe --dirty --broken
 
