@@ -1,5 +1,15 @@
 language: go
 
 go:
-  - 1.8
-  - 1.9
+- 1.8
+- 1.9
+
+after_success:
+- |-
+  if [ "$TRAVIS_TAG" != "" ]; then
+    curl -H "Content-Type: application/json" --data '{"source_type": "Tag", "source_name": "'$TRAVIS_BRANCH'"}' -X POST https://registry.hub.docker.com/u/sylr/alertmanager-splunkbot/trigger/$DOCKERHUB_TRIGGER_TOKEN/
+  fi
+- |-
+  if [ "$TRAVIS_BRANCH" == "master" ]; then
+    curl -H "Content-Type: application/json" --data '{"source_type": "Branch", "source_name": "'$TRAVIS_BRANCH'"}' -X POST https://registry.hub.docker.com/u/sylr/alertmanager-splunkbot/trigger/$DOCKERHUB_TRIGGER_TOKEN/
+  fi
