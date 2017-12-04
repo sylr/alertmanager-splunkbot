@@ -4,7 +4,7 @@ Alertmanager splunkbot k8s container:
 
 ```yaml
       - name: prometheus-alertmanager-splunkbot
-        image: sylvainlectra/alertmanager-splunkbot:0.5
+        image: sylr/alertmanager-splunkbot:v0.0.6
         args:
         - -v
         - --insecure
