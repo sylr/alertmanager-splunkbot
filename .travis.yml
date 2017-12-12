@@ -9,10 +9,10 @@ script:
 
 after_success:
 - |-
-  if [ "$TRAVIS_TAG" != "" ]; then
+  if [[ "$TRAVIS_TAG" != "" ]]; then
     curl -H "Content-Type: application/json" --data '{"source_type": "Tag", "source_name": "'$TRAVIS_BRANCH'"}' -X POST https://registry.hub.docker.com/u/sylr/alertmanager-splunkbot/trigger/$DOCKERHUB_TRIGGER_TOKEN/
   fi
 - |-
-  if [ "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" ]; then
+  if [[ "$TRAVIS_BRANCH" == "master" && "$TRAVIS_PULL_REQUEST" == "false" ]]; then
     curl -H "Content-Type: application/json" --data '{"source_type": "Branch", "source_name": "'$TRAVIS_BRANCH'"}' -X POST https://registry.hub.docker.com/u/sylr/alertmanager-splunkbot/trigger/$DOCKERHUB_TRIGGER_TOKEN/
   fi
