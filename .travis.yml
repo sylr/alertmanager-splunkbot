@@ -1,8 +1,11 @@
 language: go
 
 go:
-- 1.8
 - 1.9
+
+script:
+  - go test -v ./...
+  - go build
 
 after_success:
 - |-
