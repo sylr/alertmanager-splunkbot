@@ -1,10 +1,14 @@
-Forwarding alerts sent by prometheus alertmaneger to splunk in order to understand the logic ...
+# alertmanager-splunkbot
+
+[![Docker Repository on Quay](https://quay.io/repository/sylr/alertmanager-splunkbot/status "Docker Repository on Quay")](https://quay.io/repository/sylr/alertmanager-splunkbot)
+
+Forwarding alerts sent by prometheus alertmanager to splunk in order to understand the logic ...
 
 Alertmanager splunkbot k8s container:
 
 ```yaml
       - name: prometheus-alertmanager-splunkbot
-        image: sylr/alertmanager-splunkbot:v0.0.6
+        image: quay.io/sylr/alertmanager-splunkbot:v0.0.9
         args:
         - -v
         - --insecure
