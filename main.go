@@ -29,7 +29,7 @@ type SplunkbotOptions struct {
 var (
   opts    = SplunkbotOptions{}
   parser  = flags.NewParser(&opts, flags.Default)
-  version = "v0.0.8"
+  version = "v0.0.9"
 )
 
 func init() {
