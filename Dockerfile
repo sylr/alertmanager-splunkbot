@@ -1,4 +1,4 @@
-FROM golang:1.9.2-alpine3.6 as builder
+FROM golang:1.10-alpine3.7 as builder
 
 ADD . $GOPATH/src/github.com/sylr/alertmanager-splunkbot
 WORKDIR $GOPATH/src/github.com/sylr/alertmanager-splunkbot
@@ -13,7 +13,7 @@ RUN go install
 
 # -----------------------------------------------------------------------------
 
-FROM alpine:3.6
+FROM alpine:3.7
 
 WORKDIR /usr/local/bin
 RUN apk --no-cache add ca-certificates
