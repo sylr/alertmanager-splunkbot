@@ -8,22 +8,25 @@ import (
 	"github.com/jessevdk/go-flags"
 	log "github.com/sirupsen/logrus"
 	"github.com/sylr/alertmanager-splunkbot/splunkbot"
+	"net"
 	"net/http"
 	"os"
 	"time"
 )
 
 type SplunkbotOptions struct {
-	Verbose           []bool `short:"v" long:"verbose" description:"Show verbose debug information"`
-	Version           bool   `          long:"version" description:"Show version"`
-	ListeningAddress  string `short:"a" long:"address" description:"Listening address" env:"SPLUNKBOT_LISTENING_ADDRESS" default:"127.0.0.1"`
-	ListeningPort     uint   `short:"p" long:"port" description:"Listening port" env:"SPLUNKBOT_LISTENING_PORT" default:"44553"`
-	SplunkUrl         string `short:"u" long:"splunk-url" description:"Splunk HEC endpoint" env:"SPLUNKBOT_SPLUNK_URL" required:"true"`
-	SplunkHTTPTimeout uint   `short:"n" long:"splunk-timeout" description:"Splunk HEC timeout (seconds)" env:"SPLUNKBOT_SPLUNK_HTTP_TIMEOUT" default:"5"`
-	SplunkToken       string `short:"t" long:"splunk-token" description:"Splunk HEC token" env:"SPLUNKBOT_SPLUNK_TOKEN" required:"true"`
-	SplunkIndex       string `short:"i" long:"splunk-index" description:"Splunk index" env:"SPLUNKBOT_SPLUNK_INDEX"`
-	SplunkSourcetype  string `short:"s" long:"splunk-sourcetype" description:"Splunk event sourcetype" env:"SPLUNKBOT_SPLUNK_SOURCETYPE" required:"true" default:"alertmanager"`
-	SplunkTLSInsecure bool   `short:"k" long:"insecure" description:"Do not check Splunk TLS certificate"`
+	Verbose              []bool `short:"v" long:"verbose" description:"Show verbose debug information"`
+	Version              bool   `          long:"version" description:"Show version"`
+	ListeningAddress     string `short:"a" long:"address" description:"Listening address" env:"SPLUNKBOT_LISTENING_ADDRESS" default:"127.0.0.1"`
+	ListeningPort        uint   `short:"p" long:"port" description:"Listening port" env:"SPLUNKBOT_LISTENING_PORT" default:"44553"`
+	TLSHandshakeTimeout  uint   `short:"h" long:"tls-timeout" description:"TLS Handshake timeout (seconds)" env:"SPLUNKBOT_TLS_TIMEOUT" default:"5"`
+	TransportDialTimeout uint   `short:"d" long:"dial-timeout" description:"Transport Dial timeout (seconds)" env:"SPLUNKBOT_DIAL_TIMEOUT" default:"5"`
+	SplunkUrl            string `short:"u" long:"splunk-url" description:"Splunk HEC endpoint" env:"SPLUNKBOT_SPLUNK_URL" required:"true"`
+	SplunkHTTPTimeout    uint   `short:"n" long:"splunk-timeout" description:"Splunk HEC timeout (seconds)" env:"SPLUNKBOT_SPLUNK_HTTP_TIMEOUT" default:"5"`
+	SplunkToken          string `short:"t" long:"splunk-token" description:"Splunk HEC token" env:"SPLUNKBOT_SPLUNK_TOKEN" required:"true"`
+	SplunkIndex          string `short:"i" long:"splunk-index" description:"Splunk index" env:"SPLUNKBOT_SPLUNK_INDEX"`
+	SplunkSourcetype     string `short:"s" long:"splunk-sourcetype" description:"Splunk event sourcetype" env:"SPLUNKBOT_SPLUNK_SOURCETYPE" required:"true" default:"alertmanager"`
+	SplunkTLSInsecure    bool   `short:"k" long:"insecure" description:"Do not check Splunk TLS certificate"`
 }
 
 var (
@@ -83,6 +86,10 @@ func main() {
 
 	// HTTP Transport
 	tr := &http.Transport{
+		Dial: (&net.Dialer{
+			Timeout: time.Duration(opts.TransportDialTimeout) * time.Second,
+		}).Dial,
+		TLSHandshakeTimeout: time.Duration(opts.TLSHandshakeTimeout) * time.Second,
 		TLSClientConfig: &tls.Config{
 			InsecureSkipVerify: opts.SplunkTLSInsecure,
 		},
