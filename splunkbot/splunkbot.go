@@ -94,5 +94,6 @@ func (sbot Splunkbot) alert(w http.ResponseWriter, r *http.Request) {
 		w.Write(buf)
 	}
 
+	defer resp.Body.Close()
 	log.Debugf("End of request")
 }
