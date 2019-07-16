@@ -71,6 +71,7 @@ func (sbot Splunkbot) alert(w http.ResponseWriter, r *http.Request) {
 	jr := bytes.NewReader(j)
 
 	splunkReq, _ := http.NewRequest("POST", sbot.SplunkUrl, jr)
+  splunkReq.Close = true
 	splunkReq.Header.Set("Authorization", "Splunk "+sbot.SplunkToken)
 
 	// Do request
