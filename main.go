@@ -22,7 +22,7 @@ type SplunkbotOptions struct {
 	TLSHandshakeTimeout  uint   `short:"h" long:"tls-timeout" description:"TLS Handshake timeout (seconds)" env:"SPLUNKBOT_TLS_TIMEOUT" default:"5"`
 	TransportDialTimeout uint   `short:"d" long:"dial-timeout" description:"Transport Dial timeout (seconds)" env:"SPLUNKBOT_DIAL_TIMEOUT" default:"5"`
 	SplunkUrl            string `short:"u" long:"splunk-url" description:"Splunk HEC endpoint" env:"SPLUNKBOT_SPLUNK_URL" required:"true"`
-	SplunkHTTPTimeout    uint   `short:"n" long:"splunk-timeout" description:"Splunk HEC timeout (seconds)" env:"SPLUNKBOT_SPLUNK_HTTP_TIMEOUT" default:"5"`
+	SplunkHTTPTimeout    uint   `short:"n" long:"splunk-timeout" description:"Splunk HEC timeout (seconds)" env:"SPLUNKBOT_SPLUNK_HTTP_TIMEOUT" default:"10"`
 	SplunkToken          string `short:"t" long:"splunk-token" description:"Splunk HEC token" env:"SPLUNKBOT_SPLUNK_TOKEN" required:"true"`
 	SplunkIndex          string `short:"i" long:"splunk-index" description:"Splunk index" env:"SPLUNKBOT_SPLUNK_INDEX"`
 	SplunkSourcetype     string `short:"s" long:"splunk-sourcetype" description:"Splunk event sourcetype" env:"SPLUNKBOT_SPLUNK_SOURCETYPE" required:"true" default:"alertmanager"`
