@@ -1,23 +1,27 @@
-FROM golang:1.10-alpine3.7 as builder
+FROM golang:1.14 as builder
 
-ADD . $GOPATH/src/github.com/sylr/alertmanager-splunkbot
 WORKDIR $GOPATH/src/github.com/sylr/alertmanager-splunkbot
 
-RUN apk update && apk upgrade && apk add --no-cache git
+RUN apt-get update && apt-get dist-upgrade -y && apt-get install -y build-essential git
 
-RUN uname -a
+ADD . .
+
 RUN go version
 
-RUN go build -ldflags "-X main.version=$(git describe --dirty --broken)"
-RUN go install
+RUN git update-index --refresh; true
+RUN CGO_ENABLED=0 go build -ldflags "-extldflags '-static' -w -s -X main.version=$(git describe --dirty --broken)"
 
 # -----------------------------------------------------------------------------
 
-FROM alpine:3.7
+FROM scratch
 
 WORKDIR /usr/local/bin
-RUN apk --no-cache add ca-certificates
-RUN apk update && apk upgrade && apk add --no-cache bash curl
-COPY --from=builder "/go/bin/alertmanager-splunkbot" .
+
+COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=builder /etc/passwd /etc/passwd
+COPY --from=builder /etc/group /etc/group
+COPY --from=builder /etc/services /etc/services
+COPY --from=builder "/go/src/github.com/sylr/alertmanager-splunkbot/alertmanager-splunkbot" .
 
 ENTRYPOINT ["/usr/local/bin/alertmanager-splunkbot"]
