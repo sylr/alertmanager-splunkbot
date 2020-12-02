@@ -6,13 +6,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
 
+// SpunkHECMessage ...
 type SpunkHECMessage struct {
 	Time       string      `json:"time,omitempty"`
 	Host       string      `json:"host,omitempty"`
@@ -22,6 +24,7 @@ type SpunkHECMessage struct {
 	Event      interface{} `json:"event"`
 }
 
+// Splunkbot ...
 type Splunkbot struct {
 	HttpClient       *http.Client
 	ListeningAddress string
@@ -32,6 +35,7 @@ type Splunkbot struct {
 	SplunkToken      string
 }
 
+// Serve ...
 func (sbot Splunkbot) Serve() error {
 	http.HandleFunc("/", sbot.alert)
 	err := http.ListenAndServe(fmt.Sprintf("%s:%d", sbot.ListeningAddress, sbot.ListeningPort), nil)
@@ -46,8 +50,15 @@ func (sbot Splunkbot) alert(w http.ResponseWriter, r *http.Request) {
 	var message SpunkHECMessage
 
 	// Decode input
-	buf, _ := ioutil.ReadAll(r.Body)
-	err := json.Unmarshal(buf, &alert)
+	buf, err := ioutil.ReadAll(r.Body)
+
+	if err != nil {
+		log.Errorf("Failed to read request: %+v", err)
+		w.WriteHeader(503)
+		return
+	}
+
+	err = json.Unmarshal(buf, &alert)
 
 	// if buf is not valid json we cast it as string
 	if err != nil {
@@ -67,7 +78,14 @@ func (sbot Splunkbot) alert(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// HTTP Splunk request
-	j, _ := json.Marshal(message)
+	j, err := json.Marshal(message)
+
+	if err != nil {
+		log.Errorf("Failed to marshal json: %+v", err)
+		w.WriteHeader(503)
+		return
+	}
+
 	jr := bytes.NewReader(j)
 
 	splunkReq, _ := http.NewRequest("POST", sbot.SplunkUrl, jr)
@@ -88,12 +106,20 @@ func (sbot Splunkbot) alert(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(503)
 			w.Write([]byte(fmt.Sprintf("Something went wrong:\n\n%+v\n", err)))
 		}
-	} else {
-		buf, _ := ioutil.ReadAll(resp.Body)
-		w.WriteHeader(resp.StatusCode)
-		w.Write(buf)
 	}
 
 	defer resp.Body.Close()
+
+	respBodyBuf, err := ioutil.ReadAll(resp.Body)
+
+	if err != nil {
+		log.Errorf("Failed to read splunk response: %+v", err)
+	}
+
+	log.Debugf("Splunk response status code: %d", resp.StatusCode)
+
+	w.WriteHeader(resp.StatusCode)
+	w.Write(respBodyBuf)
+
 	log.Debugf("End of request")
 }
