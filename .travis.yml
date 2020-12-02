@@ -1,11 +1,11 @@
 language: go
 
 go:
-- 1.14
+- "1.15"
 
 script:
-  - go test -v ./...
-  - go build
+- go test -v ./...
+- go build
 
 after_success:
 - |-
